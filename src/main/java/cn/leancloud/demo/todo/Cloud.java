@@ -32,34 +32,37 @@ public class Cloud {
 
             @Override
             public void onNext(@NotNull List<AVObject> avObjects) {
-                AVObject hr = new AVObject("HR");
-                hr.put("gmPhone", phone);
-                hr.put("name", "未认证企业");
-                hr.put("state", "未认证");
 
-                AVObject avUser = AVObject.createWithoutData("UserInfo", userId);
-                avUser.put("hr", hr);
-                avUser.put("hrPower", "master");
-                avUser.save();
+                if (avObjects.size() > 0) {
 
-                AVACL acl = new AVACL();
-                acl.setPublicReadAccess(true);
-                acl.setWriteAccess(userId, true);
+                    AVObject hr = new AVObject("HR");
+                    hr.put("gmPhone", phone);
+                    hr.put("name", "未认证企业");
+                    hr.put("state", "未认证");
 
-                for (AVObject job : avObjects) {
-                    job.put("hr", hr);
-                    job.put("user", avUser);
-                    job.setACL(acl);
+                    AVObject avUser = AVObject.createWithoutData("UserInfo", userId);
+                    avUser.put("hr", hr);
+                    avUser.put("hrPower", "master");
+                    avUser.save();
+
+                    AVACL acl = new AVACL();
+                    acl.setPublicReadAccess(true);
+                    acl.setWriteAccess(userId, true);
+
+                    for (AVObject job : avObjects) {
+                        job.put("hr", hr);
+                        job.put("user", avUser);
+                        job.setACL(acl);
+                    }
+                    try {
+                        AVObject.saveAll(avObjects);
+                    } catch (AVException e) {
+                        e.printStackTrace();
+                    }
+
+                    AVObject log = new AVObject("Log");
+                    log.put("content", "职位转移" + phone + "    userId" + userId);
                 }
-                try {
-                    AVObject.saveAll(avObjects);
-                } catch (AVException e) {
-                    e.printStackTrace();
-                }
-
-                AVObject log = new AVObject("Log");
-                log.put("content", "职位转移" + phone + "    userId" + userId);
-
             }
 
             @Override
