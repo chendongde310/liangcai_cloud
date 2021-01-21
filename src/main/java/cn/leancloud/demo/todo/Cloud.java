@@ -15,68 +15,53 @@ import java.util.List;
 //lean deploy 上传
 public class Cloud {
     /**
-     * @param phone  手机号码
      * @param userId 用户ID
      * @return
      */
     @EngineFunction("moveJobs")
-    public static String moveJobs(@EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId,@EngineFunctionParam("userInfoId") String userInfoId) {
+    public static AVObject moveJobs(  @EngineFunctionParam("userId") String userId,@EngineFunctionParam("userInfo") AVObject avUser) {
 
+        String phone = avUser.getString("phone");
         AVQuery<AVObject> avQuery = new AVQuery<>("Job");
         avQuery.whereEqualTo("phone", phone);
-        avQuery.findInBackground().subscribe(new Observer<List<AVObject>>() {
-            @Override
-            public void onSubscribe(@NotNull Disposable disposable) {
+        List<AVObject> jobs = avQuery.find();
+        if (jobs.size() > 0) {
 
+            AVObject hr = new AVObject("HR");
+            hr.put("gmPhone", phone);
+            hr.put("name", "未认证企业");
+            hr.put("state", "未认证");
+
+
+            avUser.put("hr", hr);
+            avUser.put("hrPower", "master");
+            avUser.save();
+
+            AVACL acl = new AVACL();
+            acl.setPublicReadAccess(true);
+            acl.setWriteAccess(userId, true);
+
+            for (AVObject job : jobs) {
+                job.put("hr", hr);
+                job.put("user", avUser);
+                job.setACL(acl);
             }
-
-            @Override
-            public void onNext(@NotNull List<AVObject> avObjects) {
-
-                if (avObjects.size() > 0) {
-
-                    AVObject hr = new AVObject("HR");
-                    hr.put("gmPhone", phone);
-                    hr.put("name", "未认证企业");
-                    hr.put("state", "未认证");
-
-                    AVObject avUser = AVObject.createWithoutData("UserInfo", userInfoId);
-                    avUser.put("hr", hr);
-                    avUser.put("hrPower", "master");
-                    avUser.save();
-
-                    AVACL acl = new AVACL();
-                    acl.setPublicReadAccess(true);
-                    acl.setWriteAccess(userId, true);
-
-                    for (AVObject job : avObjects) {
-                        job.put("hr", hr);
-                        job.put("user", avUser);
-                        job.setACL(acl);
-                    }
-                    try {
-                        AVObject.saveAll(avObjects);
-                    } catch (AVException e) {
-                        e.printStackTrace();
-                    }
-
-                    AVObject log = new AVObject("Log");
-                    log.put("content", "职位转移" + phone + "    userInfoId" + userInfoId);
-                    log.save();
-                }
+            try {
+                AVObject.saveAll(jobs);
+            } catch (AVException e) {
+                e.printStackTrace();
             }
+            AVObject log = new AVObject("Log");
+            log.put("content", "职位转移" + phone + "    userInfoId" + avUser.getObjectId());
+            log.save();
 
-            @Override
-            public void onError(@NotNull Throwable throwable) {
+            return avUser;
+        }else {
+            avUser.save();
+        }
 
-            }
 
-            @Override
-            public void onComplete() {
-
-            }
-        });
-        return "onComplete";
+        return avUser;
     }
 
 
