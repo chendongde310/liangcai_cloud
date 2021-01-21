@@ -20,7 +20,7 @@ public class Cloud {
      * @return
      */
     @EngineFunction("moveJobs")
-    public static String moveJobs(@EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId) {
+    public static String moveJobs(@EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId,@EngineFunctionParam("userInfoId") String userInfoId) {
 
         AVQuery<AVObject> avQuery = new AVQuery<>("Job");
         avQuery.whereEqualTo("phone", phone);
@@ -40,7 +40,7 @@ public class Cloud {
                     hr.put("name", "未认证企业");
                     hr.put("state", "未认证");
 
-                    AVObject avUser = AVObject.createWithoutData("UserInfo", userId);
+                    AVObject avUser = AVObject.createWithoutData("UserInfo", userInfoId);
                     avUser.put("hr", hr);
                     avUser.put("hrPower", "master");
                     avUser.save();
@@ -61,7 +61,8 @@ public class Cloud {
                     }
 
                     AVObject log = new AVObject("Log");
-                    log.put("content", "职位转移" + phone + "    userId" + userId);
+                    log.put("content", "职位转移" + phone + "    userInfoId" + userInfoId);
+                    log.save();
                 }
             }
 
@@ -75,7 +76,7 @@ public class Cloud {
 
             }
         });
-        return "";
+        return "onComplete";
     }
 
 
