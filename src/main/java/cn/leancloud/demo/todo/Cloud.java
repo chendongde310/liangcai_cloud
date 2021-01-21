@@ -19,7 +19,7 @@ public class Cloud {
      * @return
      */
     @EngineFunction("moveJobs")
-    public static AVObject moveJobs( @EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId) {
+    public static String moveJobs( @EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId) {
 
         AVQuery<AVObject> avQuery = new AVQuery<>("Job");
         avQuery.whereEqualTo("phone", phone);
@@ -54,7 +54,7 @@ public class Cloud {
             log.put("content", "职位转移" + phone + "    userInfoId" + avUser.getObjectId());
             log.save();
         }
-        return avUser;
+        return "成功";
     }
 
 
