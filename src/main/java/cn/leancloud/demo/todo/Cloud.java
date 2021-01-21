@@ -19,20 +19,18 @@ public class Cloud {
      * @return
      */
     @EngineFunction("moveJobs")
-    public static String moveJobs( @EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId) {
+    public static boolean moveJobs( @EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId,@EngineFunctionParam("userInfoId") String userInfoId) {
 
         AVQuery<AVObject> avQuery = new AVQuery<>("Job");
         avQuery.whereEqualTo("phone", phone);
         List<AVObject> jobs = avQuery.find();
-        AVObject avUser = new AVObject("UserInfo");
+        AVObject avUser = AVObject.createWithoutData("UserInfo",userInfoId);
         AVObject hr = new AVObject("HR");
         hr.put("gmPhone", phone);
         hr.put("name", "未认证企业");
         hr.put("state", "未认证");
         avUser.put("hr", hr);
         avUser.put("hrPower", "master");
-        avUser.put("nickname", "良才"+phone.substring(7,11));
-        avUser.put("phone", phone);
 
         avUser.save();
 
@@ -53,8 +51,11 @@ public class Cloud {
             AVObject log = new AVObject("Log");
             log.put("content", "职位转移" + phone + "    userInfoId" + avUser.getObjectId());
             log.save();
+            return true;
+        }else {
+            return false;
         }
-        return "成功";
+
     }
 
 
