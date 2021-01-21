@@ -24,7 +24,7 @@ public class Cloud {
         AVQuery<AVObject> avQuery = new AVQuery<>("Job");
         avQuery.whereEqualTo("phone", phone);
         List<AVObject> jobs = avQuery.find();
-        AVObject avUser = new AVObject("HR");
+        AVObject avUser = new AVObject("UserInfo");
         AVObject hr = new AVObject("HR");
         hr.put("gmPhone", phone);
         hr.put("name", "未认证企业");
