@@ -19,28 +19,27 @@ public class Cloud {
      * @return
      */
     @EngineFunction("moveJobs")
-    public static AVObject moveJobs(  @EngineFunctionParam("userId") String userId,@EngineFunctionParam("userInfo") AVObject avUser) {
+    public static AVObject moveJobs( @EngineFunctionParam("phone") String phone, @EngineFunctionParam("userId") String userId) {
 
-        String phone = avUser.getString("phone");
         AVQuery<AVObject> avQuery = new AVQuery<>("Job");
         avQuery.whereEqualTo("phone", phone);
         List<AVObject> jobs = avQuery.find();
+        AVObject avUser = new AVObject("HR");
+        AVObject hr = new AVObject("HR");
+        hr.put("gmPhone", phone);
+        hr.put("name", "未认证企业");
+        hr.put("state", "未认证");
+        avUser.put("hr", hr);
+        avUser.put("hrPower", "master");
+        avUser.put("nickname", "良才"+phone.substring(7,11));
+        avUser.put("phone", phone);
+
+        avUser.save();
+
         if (jobs.size() > 0) {
-
-            AVObject hr = new AVObject("HR");
-            hr.put("gmPhone", phone);
-            hr.put("name", "未认证企业");
-            hr.put("state", "未认证");
-
-
-            avUser.put("hr", hr);
-            avUser.put("hrPower", "master");
-            avUser.save();
-
             AVACL acl = new AVACL();
             acl.setPublicReadAccess(true);
             acl.setWriteAccess(userId, true);
-
             for (AVObject job : jobs) {
                 job.put("hr", hr);
                 job.put("user", avUser);
@@ -54,13 +53,7 @@ public class Cloud {
             AVObject log = new AVObject("Log");
             log.put("content", "职位转移" + phone + "    userInfoId" + avUser.getObjectId());
             log.save();
-
-            return avUser;
-        }else {
-            avUser.save();
         }
-
-
         return avUser;
     }
 
